@@ -4,4 +4,5 @@
   (lib (name "CherryMX_KailhSocket")(type "KiCad")(uri "/home/boyan/Projects/uni-related/game_console/pcb/footprints/kicad-libraries/footprints/CherryMX_KailhSocket.pretty")(options "")(descr ""))
   (lib (name "footprints")(type "KiCad")(uri "/home/boyan/Projects/uni-related/game_console/pcb/footprints")(options "")(descr ""))
   (lib (name "SSD1306")(type "KiCad")(uri "/home/boyan/Projects/uni-related/game_console/pcb/footprints/KiCad-SSD1306-128x64/library/SSD1306.pretty")(options "")(descr ""))
+  (lib (name "gameboy-color")(type "KiCad")(uri "/home/boyan/Projects/uni-related/game_console/pcb/footprints/gameboy-color.pretty")(options "")(descr ""))
 )

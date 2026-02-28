@@ -3,4 +3,5 @@
   (lib (name "RP2040-ZERO")(type "KiCad")(uri "/home/boyan/Projects/uni-related/game_console/pcb/footprints/RP2040-ZERO.kicad_sym")(options "")(descr ""))
   (lib (name "CherryMX")(type "Legacy")(uri "/home/boyan/Projects/uni-related/game_console/pcb/footprints/kicad-libraries/symbols/CherryMX.lib")(options "")(descr ""))
   (lib (name "SSD1306-128x64_OLED")(type "Legacy")(uri "/home/boyan/Projects/uni-related/game_console/pcb/footprints/KiCad-SSD1306-128x64/library/SSD1306-128x64_OLED.lib")(options "")(descr ""))
+  (lib (name "custom")(type "KiCad")(uri "/home/boyan/Projects/uni-related/game_console/pcb/footprints/custom.kicad_sym")(options "")(descr ""))
 )
