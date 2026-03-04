@@ -36,7 +36,7 @@ int main() {
         oled.show_image(show_image);
         show_image = !show_image;
         
-        buttons.test();
+        // buttons.test();
         delay(1000);
     }
     
