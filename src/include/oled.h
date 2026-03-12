@@ -9,4 +9,5 @@ public:
     Oled();
     bool init();
     void show_image(bool show);
+    void show_button(const char* button_name);
 };

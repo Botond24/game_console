@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <USB.h>
-#include "loader.h"
 #include "buttons.h"
+#include "loader.h"
 #include "oled.h"
 
 void DO_NOT_TOUCH() {
@@ -14,7 +14,7 @@ int main() {
     DO_NOT_TOUCH();
 
     Serial.begin(115200);
-    delay(1000);
+    delay(5000);
     
     Oled oled;
     Loader loader;
@@ -28,16 +28,23 @@ int main() {
     Serial.println(oled_ok ? "OK" : "FAIL");
     Serial.print("SD Card: ");
     Serial.println(sd_ok ? "OK" : "FAIL");
-    Serial.println("Buttons: OK");
-    
-    bool show_image = true;
-    
+    Serial.println("Button test ready");
+
+    if (sd_ok) {
+      loader.list_root();
+    }
+
     while (true) {
-        oled.show_image(show_image);
-        show_image = !show_image;
-        
-        // buttons.test();
-        delay(1000);
+      const char* clicked = buttons.read_clicked();
+      if (clicked != nullptr) {
+        Serial.print("Clicked: ");
+        Serial.println(clicked);
+        if (oled_ok) {
+          oled.show_button(clicked);
+        }
+      }
+
+      delay(20);
     }
     
     return 0;

@@ -98,3 +98,22 @@ void Oled::show_image(bool show) {
     }
     display.display();
 }
+
+void Oled::show_button(const char* button_name) {
+	display.clearDisplay();
+
+	display.setTextColor(SSD1306_WHITE);
+	display.setTextSize(1);
+	display.setCursor(0, 0);
+	display.println("Button:");
+
+	display.setTextSize(2);
+	display.setCursor(0, 24);
+	if (button_name != nullptr) {
+		display.println(button_name);
+	} else {
+		display.println("NONE");
+	}
+
+	display.display();
+}
