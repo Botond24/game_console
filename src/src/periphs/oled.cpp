@@ -1,3 +1,5 @@
+// IMPORTANT: MAKE SURE TO WRAP YOUR CODE IN MUTEXES
+// IF UR ACCESSING THE OLED
 #include "oled.h"
 #include "pins.h"
 #include <Adafruit_GFX.h>
@@ -99,55 +101,67 @@ const unsigned char chippy[] PROGMEM = {
     0x00, 0x00, 0x00, 0x00};
 
 bool Oled::init() {
-  Wire.setSDA(PIN_OLED_SDA);
-  Wire.setSCL(PIN_OLED_SCL);
-  Wire.begin();
+    mutex_init(&mutex);  // must be first
+    Wire.setSDA(PIN_OLED_SDA);
+    Wire.setSCL(PIN_OLED_SCL);
+    Wire.begin();
+    if (!display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADDR)) {
+        Serial.println("[OLED] FAIL - SSD1306 not found");
+        return false;
+    }
+    display.setTextSize(1);
+    display.setTextColor(SSD1306_WHITE);
+    display.setCursor(0, 0);
+    return true;
+}
 
-  if (!display.begin(SSD1306_SWITCHCAPVCC, OLED_I2C_ADDR)) {
-    Serial.println("[OLED] FAIL - SSD1306 not found");
-    return false;
-  }
-
-  display.setTextSize(1);
-  display.setTextColor(SSD1306_WHITE);
-  display.setCursor(0, 0);
+void Oled::drawPixel(int x, int y, uint16_t whiteness) {
+    lock();
+    display.drawPixel(x, y, whiteness);
+    unlock();
+}
 
 
-  return true;
+void Oled::flush() {
+    lock();
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.display();
+    unlock();
+}
+
+void Oled::clear() {
+    flush();
 }
 
 void Oled::show_image(bool show) {
-  display.clearDisplay();
-  if (show) {
-    display.drawBitmap(0, 0, chippy, 128, 64, SSD1306_WHITE);
-  }
-  display.display();
+    lock();
+    display.clearDisplay();
+    if (show) display.drawBitmap(0, 0, chippy, 128, 64, SSD1306_WHITE);
+    display.display();
+    unlock();
 }
 
-void Oled::flush() {
-  display.clearDisplay();
-  display.setCursor(0, 0);
-  display.display();
-}
-void Oled::clear() {
-  // compat
-  flush();
-}
 size_t Oled::write(uint8_t byte) {
+    lock();
     display.write(byte);
-    if (byte == '\n') {
-        display.display();
-    }
+    if (byte == '\n') display.display();
+    unlock();
     return 1;
-}
-size_t Oled::println(const String& msg) {
-    display.println(msg);
-    display.display();
-    return msg.length() + 1; // +1 for newline
 }
 
 size_t Oled::print(const String& msg) {
+    lock();
     display.print(msg);
     display.display();
+    unlock();
     return msg.length();
+}
+
+size_t Oled::println(const String& msg) {
+    lock();
+    display.println(msg);
+    display.display();
+    unlock();
+    return msg.length() + 1;
 }

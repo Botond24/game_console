@@ -1,10 +1,17 @@
 #include "loader/boot.h"
-#include "shared.h"
 
+Bootloader bootloader;
 
-int main() {
-    Bootloader bootloader;
+void setup() {
     bootloader.init();
-    
-    return 0;
 }
+
+void loop() {}
+
+void setup1() {
+    uint32_t addr = rp2040.fifo.pop();
+    typedef void (*game_entry_t)(const HAL*);
+    ((game_entry_t)addr)(game_hal);
+}
+
+void loop1() {}

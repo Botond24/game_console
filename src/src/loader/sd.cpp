@@ -13,11 +13,22 @@ bool SDLoader::init() {
 }
 
 bool SDLoader::testFat32() {
-    File root = SD.open("/");
-    if (!root) {
-        
+    // try making and removing a file
+    if (!SD.begin(PIN_SD_CS)) {
         return false;
     }
-    root.close();
+    
+    File testFile = SD.open("/test.txt", FILE_WRITE);
+    if (!testFile) {
+        return false;
+    }
+
+    testFile.println("This is a test.");
+    testFile.close();
+
+    if (!SD.remove("/test.txt")) {
+        return false;
+    }
+
     return true;
 }

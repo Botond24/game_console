@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "loader/boot.h"
 
-
+const HAL* volatile game_hal = nullptr;
 bool Bootloader::pressed(int pin) {
     return digitalRead(pin) == LOW;
 }
@@ -12,15 +12,52 @@ void Bootloader::DO_NOT_TOUCH() {
   USB.begin();
 }
 
-void Bootloader::loop(void (*main_func)(const HAL&)) {
+// TODO: Linker script for games
+void Bootloader::launch(const char* path) {
+    File f = SD.open(path);
+    uint8_t* dest = (uint8_t*)GAME_LOAD_ADDR;
+    while (f.available()) *dest++ = f.read();
+    f.close();
+
+    // barrier
+    __dmb();
+
+    game_hal = &hal;
+
+    rp2040.fifo.push(GAME_LOAD_ADDR);
+
+    overlay_loop();
+}
+
+void Bootloader::overlay_loop() {
     while (true) {
-        main_func(hal);
+        delay(50);
+        if (pressed(PIN_BTN_A) && pressed(PIN_BTN_B) && pressed(PIN_UP)) {
+            kill_game();
+            menu();
+            return;
+        }
     }
 }
+
+void Bootloader::kill_game() {
+    rp2040.restartCore1();
+}
+
+// TODO: USB mass storage mode to uplaod games to the SD card?
+void Bootloader::upload_mode() {
+    exception("Upload mode not implemented yet", oled);
+}
+
+// TODO: menu
+void Bootloader::menu() {
+  exception("No games and no bacon", oled);
+}
+
 void Bootloader::init() {
 
     DO_NOT_TOUCH();
-
+    hal = create_hal();
     // boot sequence
     bool oled_ok = oled.init();
     oled.show_image(true);
@@ -53,13 +90,29 @@ void Bootloader::init() {
         stream.println("[BOOT] SD card init failed!");
     }
 
-    if (sd_ok) {
-        loader.listRoot([&stream](const char* name) {
-            stream.println(name);
-        });
-    }
+    menu();
+}
 
-    delay(1000);
-    oled.clear();
+HAL Bootloader::create_hal() {
+    hal.ctx = this;
+    // TODO: have core 0 own all rendering and core 1 just submits draw commands
+    hal.draw_pixel = [](void* ctx, int x, int y, uint16_t whiteness) {
+        Bootloader* bootloader = (Bootloader*)ctx;
+        bootloader->oled.drawPixel(x, y, whiteness);
+    };
 
+    hal.read_input = [](void* ctx) -> KeyState {
+        Bootloader* bootloader = (Bootloader*)ctx;
+        KeyState state = {
+            .up = bootloader->pressed(PIN_UP),
+            .down = bootloader->pressed(PIN_DOWN),
+            .left = bootloader->pressed(PIN_LEFT),
+            .right = bootloader->pressed(PIN_RIGHT),
+            .a = bootloader->pressed(PIN_BTN_A),
+            .b = bootloader->pressed(PIN_BTN_B)
+        };
+        return state;
+      };
+
+    return hal; 
 }
