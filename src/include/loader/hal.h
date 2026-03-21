@@ -12,9 +12,13 @@ struct KeyState {
 };
 
 struct HAL {
-    void *ctx;
-    void (*draw_pixel)(void* ctx, int x, int y, uint16_t whiteness);
-    KeyState (*read_input)(void* ctx);
+    void (*draw_pixel)(int x, int y, uint16_t color);
+    void (*clear_screen)(void);
+    void (*render)(void);
+    KeyState (*read_input)(void);
+    void (*delay_ms)(uint32_t ms);
+    int screen_width;
+    int screen_height;
 };
 
-extern const HAL* volatile game_hal;
+extern volatile bool game_running;
