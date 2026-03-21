@@ -1,29 +1,29 @@
 #include "loader/boot.h"
 
-volatile bool game_running = false;
+volatile bool gameRunning = false;
 
 namespace {
-Oled* g_oled = nullptr;
+Oled* gOled = nullptr;
 }
 
-HAL Bootloader::create_hal() {
-  g_oled = &oled;
+HAL Bootloader::createHal() {
+  gOled = &oled;
 
   HAL h = {};
 
-  h.draw_pixel = [](int x, int y, uint16_t color) {
-    g_oled->drawPixel(x, y, color);
+  h.drawPixel = [](int x, int y, uint16_t color) {
+    gOled->drawPixel(x, y, color);
   };
 
-  h.clear_screen = []() {
-    g_oled->clear();
+  h.clearScreen = []() {
+    gOled->clear();
   };
 
   h.render = []() {
-    g_oled->render();
+    gOled->render();
   };
 
-  h.read_input = []() -> KeyState {
+  h.readInput = []() -> KeyState {
     return {
         digitalRead(PIN_UP) == LOW,
         digitalRead(PIN_DOWN) == LOW,
@@ -34,12 +34,12 @@ HAL Bootloader::create_hal() {
     };
   };
 
-  h.delay_ms = [](uint32_t ms) {
+  h.delayMs = [](uint32_t ms) {
     delay(ms);
   };
 
-  h.screen_width = 128;
-  h.screen_height = 64;
+  h.screenWidth = 128;
+  h.screenHeight = 64;
 
   return h;
 }

@@ -3,38 +3,38 @@
 #include <Adafruit_TinyUSB.h>
 #include "loader/boot.h"
 
-constexpr uint32_t RP2040_SRAM_END = 0x20040000;
-constexpr size_t MAX_GAME_SIZE = RP2040_SRAM_END - GAME_LOAD_ADDR;
-constexpr uint16_t SD_BLOCK_SIZE = 512;
+constexpr uint32_t SRAM_END = 0x20040000;
+constexpr size_t MAX_SIZE = SRAM_END - LD_ADDR;
+constexpr uint16_t BLOCK_SIZE = 512;
 
-Adafruit_USBD_MSC usb_msc;
-Sd2Card usb_msc_card;
-SdVolume usb_msc_volume;
-bool usb_msc_started = false;
+Adafruit_USBD_MSC usbMsc;
+Sd2Card usbMscCard;
+SdVolume usbMscVolume;
+bool usbMscStarted = false;
 
 // necessary functions for the USB MSC
-int32_t msc_read_cb(uint32_t lba, void* buffer, uint32_t bufsize) {
+int32_t MSCRead(uint32_t lba, void* buffer, uint32_t bufsize) {
     (void)bufsize;
-    return usb_msc_card.readBlock(lba, static_cast<uint8_t*>(buffer)) ? SD_BLOCK_SIZE : -1;
+    return usb_msc_card.readBlock(lba, static_cast<uint8_t*>(buffer)) ? BLOCK_SIZE : -1;
 }
 
-int32_t msc_write_cb(uint32_t lba, uint8_t* buffer, uint32_t bufsize) {
+int32_t MSCWrite(uint32_t lba, uint8_t* buffer, uint32_t bufsize) {
     (void)bufsize;
-    return usb_msc_card.writeBlock(lba, buffer) ? SD_BLOCK_SIZE : -1;
+    return usb_msc_card.writeBlock(lba, buffer) ? BLOCK_SIZE : -1;
 }
 
-void msc_flush_cb(void) {
+void mscFlushCb(void) {
 }
 
 void massStorage() {
-    if (usb_msc_started) {
+    if (usbMscStarted) {
         return;
     }
 
-    usb_msc.setID("GameCon", "SD Upload", "1.0");
-    usb_msc.setReadWriteCallback(msc_read_cb, msc_write_cb, msc_flush_cb);
-    usb_msc.setUnitReady(false);
-    usb_msc.begin();
+    usbMsc.setID("ChipKid:tm:", "SD Upload", "1.0");
+    usbMsc.setReadWriteCallback(MSCRead, MSCWrite, mscFlushCb);
+    usbMsc.setUnitReady(false);
+    usbMsc.begin();
 
     if (TinyUSBDevice.mounted()) {
         TinyUSBDevice.detach();
@@ -42,7 +42,7 @@ void massStorage() {
         TinyUSBDevice.attach();
     }
 
-    usb_msc_started = true;
+    usbMscStarted = true;
 }
 
 bool isGameFile(const char* name) {
@@ -113,24 +113,24 @@ void Bootloader::DO_NOT_TOUCH() {
 }
 
 void Bootloader::launch(const char* path) {
-    String full_path = game_path(path);
+    String fullPath = gamePath(path);
 
-    File f = SD.open(full_path.c_str(), FILE_READ);
+    File f = SD.open(fullPath.c_str(), FILE_READ);
     if (!f) {
         exception("[BOOT] Failed to open game file", oled);
     }
 
-    size_t game_size = f.size();
-    if (game_size == 0) {
+    size_t gameSize = f.size();
+    if (gameSize == 0) {
         exception("[BOOT] Game file is empty", oled);
     }
 
-    if (game_size > MAX_GAME_SIZE) {
+    if (gameSize > MAX_SIZE) {
         exception("[BOOT] Game too large for RAM", oled);
     }
 
-    uint8_t* dest = (uint8_t*)GAME_LOAD_ADDR;
-    memset(dest, 0, MAX_GAME_SIZE);
+    uint8_t* dest = (uint8_t*)LD_ADDR;
+    memset(dest, 0, MAX_SIZE);
     while (f.available()) *dest++ = f.read();
     f.close();
 
@@ -140,12 +140,12 @@ void Bootloader::launch(const char* path) {
     oled.clear();
     oled.render();
 
-    game_running = true;
+    gameRunning = true;
 
     typedef void (*game_entry_t)(const HAL*);
-    ((game_entry_t)(GAME_LOAD_ADDR | 1u))(&hal);
+    ((game_entry_t)(LD_ADDR | 1u))(&hal);
 
-    game_running = false;
+    gameRunning = false;
 }
 
 void Bootloader::uploadMode() {
@@ -153,36 +153,36 @@ void Bootloader::uploadMode() {
 
     SD.end();
 
-    bool card_ok = usb_msc_card.init(SPI_HALF_SPEED, PIN_SD_CS);
-    bool volume_ok = card_ok && usb_msc_volume.init(usb_msc_card);
+    bool cardOk = usbMscCard.init(SPI_HALF_SPEED, PIN_SD_CS);
+    bool volumeOk = cardOk && usbMscVolume.init(usbMscCard);
 
     oled.clear();
     oled.println("Upload Mode");
 
-    if (volume_ok) {
-        uint32_t block_count = usb_msc_volume.blocksPerCluster() * usb_msc_volume.clusterCount();
-        usb_msc.setCapacity(block_count, SD_BLOCK_SIZE);
-        usb_msc.setUnitReady(true);
+    if (volumeOk) {
+        uint32_t blockCount = usbMscVolume.blocksPerCluster() * usbMscVolume.clusterCount();
+        usbMsc.setCapacity(blockCount, BLOCK_SIZE);
+        usbMsc.setUnitReady(true);
 
         oled.println("SD is USB drive.");
         oled.println("Copy .bin files.");
         oled.println("Press B to exit.");
     } else {
-        usb_msc.setUnitReady(false);
+        usbMsc.setUnitReady(false);
         exception("[BOOT] Failed to initialize SD card for USB mass storage", oled);
     }
 
     oled.render();
 
-    bool prev_b = false;
+    bool prevB = false;
     while (true) {
         bool b = pressed(PIN_BTN_B);
-        if (b && !prev_b) {
-            usb_msc.setUnitReady(false);
+        if (b && !prevB) {
+            usbMsc.setUnitReady(false);
             SD.begin(PIN_SD_CS);
             return;
         }
-        prev_b = b;
+        prevB = b;
         delay(30);
     }
 }
@@ -197,10 +197,10 @@ void Bootloader::menu() {
     }
 
     size_t selected = 0;
-    bool prev_up = false;
-    bool prev_down = false;
-    bool prev_a = false;
-    bool prev_b = false;
+    bool prevUp = false;
+    bool prevDown = false;
+    bool prevA = false;
+    bool prevB = false;
 
     drawMenu(oled, entries, selected);
 
@@ -210,17 +210,17 @@ void Bootloader::menu() {
         bool a = pressed(PIN_BTN_A);
         bool b = pressed(PIN_BTN_B);
 
-        if (up && !prev_up && selected > 0) {
+        if (up && !prevUp && selected > 0) {
             --selected;
             drawMenu(oled, entries, selected);
         }
 
-        if (down && !prev_down && (selected + 1) < entries.size()) {
+        if (down && !prevDown && (selected + 1) < entries.size()) {
             ++selected;
             drawMenu(oled, entries, selected);
         }
 
-        if (a && !prev_a) {
+        if (a && !prevA) {
             if (selected == 0) {
                 uploadMode();
                 drawMenu(oled, entries, selected);
@@ -230,7 +230,7 @@ void Bootloader::menu() {
             }
         }
 
-        if (b && !prev_b) {
+        if (b && !prevB) {
             entries.clear();
             entries.push_back("[Upload mode USB]");
             games = findGames(loader);
@@ -243,10 +243,10 @@ void Bootloader::menu() {
             drawMenu(oled, entries, selected);
         }
 
-        prev_up = up;
-        prev_down = down;
-        prev_a = a;
-        prev_b = b;
+        prevUp = up;
+        prevDown = down;
+        prevA = a;
+        prevB = b;
         delay(35);
     }
 }
@@ -254,10 +254,10 @@ void Bootloader::menu() {
 void Bootloader::init() {
 
     DO_NOT_TOUCH();
-    hal = create_hal();
+    hal = createHal();
     // boot sequence
-    bool oled_ok = oled.init();
-    oled.show_image(true);
+    bool oledOk = oled.init();
+    oled.showImage(true);
     delay(1000);
     oled.clear();
 
@@ -270,20 +270,20 @@ void Bootloader::init() {
     #endif
 
 
-    bool sd_ok = loader.init();
-    bool buttons_ok = buttons.init();
+    bool sdOk = loader.init();
+    bool buttonsOk = buttons.init();
 
-    if (!buttons_ok) {
+    if (!buttonsOk) {
         exception("[BOOT] Buttons init failed!", stream);
     }
 
     // test fat32
     if (!loader.testFat32()) {
       exception("[BOOT] SD card test failed! Is the card FAT32 formatted?", stream);
-      sd_ok = false;
+      sdOk = false;
     }
     
-    if (!sd_ok) {
+    if (!sdOk) {
         stream.println("[BOOT] SD card init failed!");
     }
 

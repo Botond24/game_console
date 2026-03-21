@@ -14,13 +14,13 @@ struct KeyState {
 };
 
 struct HAL {
-    void (*draw_pixel)(int x, int y, uint16_t color);
-    void (*clear_screen)(void);
+    void (*drawPixel)(int x, int y, uint16_t color);
+    void (*clearScreen)(void);
     void (*render)(void);
-    KeyState (*read_input)(void);
-    void (*delay_ms)(uint32_t ms);
-    int screen_width;
-    int screen_height;
+    KeyState (*readInput)(void);
+    void (*delayMs)(uint32_t ms);
+    int screenWidth;
+    int screenHeight;
 };
 
 #endif

@@ -12,7 +12,7 @@ private:
 public:
     Oled();
     bool init();
-    void show_image(bool show);
+    void showImage(bool show);
     void clear();
     void flush();
     void render();

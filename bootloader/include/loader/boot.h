@@ -4,7 +4,7 @@
 #include "buttons.h"
 #include "sd.h"
 
-#define GAME_LOAD_ADDR 0x20010000
+#define LD_ADDR 0x20010000
 
 
 class Bootloader {
@@ -15,11 +15,11 @@ class Bootloader {
     SDLoader loader;
     Buttons buttons;
 
-    HAL create_hal();
+    HAL createHal();
     void launch(const char* path);
 
     void menu();
-    void upload_mode();
+    void uploadMode();
 public:
     bool pressed(int pin);
     void init();

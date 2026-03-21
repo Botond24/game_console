@@ -12,7 +12,7 @@ void loop() {}
 void setup1() {}
 
 void loop1() {
-    if (!game_running) {
+    if (!gameRunning) {
         delay(100);
         return;
     }

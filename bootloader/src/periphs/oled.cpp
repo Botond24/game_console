@@ -141,7 +141,7 @@ void Oled::render() {
     unlock();
 }
 
-void Oled::show_image(bool show) {
+void Oled::showImage(bool show) {
     lock();
     display.clearDisplay();
     if (show) display.drawBitmap(0, 0, chippy, 128, 64, SSD1306_WHITE);

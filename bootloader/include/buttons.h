@@ -6,10 +6,10 @@
 class Buttons {
 public:
     bool init();
-    const char* read_clicked();
+    const char* readClicked();
 
 private:
-    uint8_t prev_state_mask = 0;
+    uint8_t prevStateMask = 0;
 };
 
 
