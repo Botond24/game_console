@@ -19,6 +19,8 @@ struct HAL {
     void (*render)(void);
     KeyState (*readInput)(void);
     void (*delayMs)(uint32_t ms);
+    int (*sdRead)(const char* path, uint8_t* buf, uint32_t offset, uint32_t len);
+    int (*sdWrite)(const char* path, const uint8_t* buf, uint32_t len);
     int screenWidth;
     int screenHeight;
 };
