@@ -15,12 +15,12 @@ bool usbMscStarted = false;
 // necessary functions for the USB MSC
 int32_t MSCRead(uint32_t lba, void* buffer, uint32_t bufsize) {
     (void)bufsize;
-    return usb_msc_card.readBlock(lba, static_cast<uint8_t*>(buffer)) ? BLOCK_SIZE : -1;
+    return usbMscCard.readBlock(lba, static_cast<uint8_t*>(buffer)) ? BLOCK_SIZE : -1;
 }
 
 int32_t MSCWrite(uint32_t lba, uint8_t* buffer, uint32_t bufsize) {
     (void)bufsize;
-    return usb_msc_card.writeBlock(lba, buffer) ? BLOCK_SIZE : -1;
+    return usbMscCard.writeBlock(lba, buffer) ? BLOCK_SIZE : -1;
 }
 
 void mscFlushCb(void) {
