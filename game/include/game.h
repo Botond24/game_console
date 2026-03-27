@@ -15,6 +15,8 @@ struct KeyState {
 
 struct HAL {
     void (*drawPixel)(int x, int y, uint16_t color);
+    void (*drawText)(int x, int y, const char* text, uint16_t color, uint8_t font[96][6]);
+    void (*drawChar)(int x, int y, char c, uint16_t color, uint8_t font[96][6]);
     void (*clearScreen)(void);
     void (*render)(void);
     KeyState (*readInput)(void);
